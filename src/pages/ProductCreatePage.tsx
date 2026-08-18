@@ -8,7 +8,6 @@ export default function ProductCreatePage() {
   const navigate = useNavigate();
   const [barcode, setBarcode] = useState("");
   const [name, setName] = useState("");
-  const [orderReferenceDays, setOrderReferenceDays] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +19,6 @@ export default function ProductCreatePage() {
       const payload: CreateProductRequest = {
         barcode,
         name,
-        orderReferenceDays: Number(orderReferenceDays),
       };
       const { data: product } = await api.post<Product>("/products", payload);
 
@@ -71,19 +69,6 @@ export default function ProductCreatePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Guaravita"
-              required
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="orderReferenceDays">Dias de Referência</label>
-            <input
-              id="orderReferenceDays"
-              type="number"
-              min="1"
-              value={orderReferenceDays}
-              onChange={(e) => setOrderReferenceDays(e.target.value)}
-              placeholder="Ex: 30"
               required
             />
           </div>

@@ -54,7 +54,6 @@ export default function ProductsPage() {
                   <th>Código de Barras</th>
                   <th>Nome</th>
                   <th>Estoque</th>
-                  <th>Dias de Referência</th>
                   <th></th>
                 </tr>
               </thead>
@@ -68,7 +67,6 @@ export default function ProductsPage() {
                         {p.quantityInStock}
                       </span>
                     </strong></td>
-                    <td><strong>{p.orderReferenceDays}</strong></td>
                     <td>
                       <div className="table-actions">
                         <Link to={`/products/${encodeURIComponent(p.barcode)}`} className="btn btn-secondary btn-sm">

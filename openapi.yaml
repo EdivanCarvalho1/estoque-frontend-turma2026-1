@@ -1,33 +1,18 @@
 openapi: 3.0.3
 info:
-  title: API de Controle de Estoque
-  description: |
-    API para gerenciamento de estoque de produtos, incluindo cadastro de produtos,
-    pedidos de compra (product orders), entradas (product inputs) e saídas (product outputs) de estoque.
+  title: Estoque API
+  description: API de controle de estoque
   version: 1.0.0
-
 servers:
   - url: http://localhost:3000
-    description: Servidor de desenvolvimento local
-
-tags:
-  - name: Products
-    description: Operações relacionadas a produtos
-  - name: Product Orders
-    description: Operações relacionadas a pedidos de produtos
-  - name: Product Inputs
-    description: Operações relacionadas a entradas de produtos no estoque
-  - name: Product Outputs
-    description: Operações relacionadas a saídas de produtos do estoque
-
+    description: Servidor local
 paths:
   /products:
     post:
+      operationId: CreateProduct
+      summary: Cria um produto
       tags:
         - Products
-      summary: Criar um novo produto
-      description: Cadastra um novo produto no sistema com estoque inicial igual a zero.
-      operationId: createProduct
       requestBody:
         required: true
         content:
@@ -35,454 +20,69 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateProductRequest'
             example:
-              barcode: "1234567899"
-              name: "Guaravita"
-              orderReferenceDays: 30
+              barcode: '123456'
+              name: Coca Cola 350ml
       responses:
         '201':
           description: Produto criado com sucesso
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
+                $ref: '#/components/schemas/Product'
               example:
-                barcode: "1234567899"
-                name: "Guaravita"
+                barcode: '123456'
+                name: Coca Cola 350ml
                 quantityInStock: 0
-                orderReferenceDays: 30
         '400':
-          description: Erro de validação ou produto já existente
+          description: Corpo da requisicao invalido ou produto ja existente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorMessage'
+                $ref: '#/components/schemas/Error'
               examples:
-                barcodeEmpty:
-                  summary: Código de barras vazio
+                invalidRequest:
                   value:
-                    message: "Barcode cannot be empty"
-                nameEmpty:
-                  summary: Nome vazio
+                    error: Invalid request body
+                duplicateProduct:
                   value:
-                    message: "Name cannot be empty"
-                invalidDays:
-                  summary: Dias de referência inválidos
-                  value:
-                    message: "Order reference days can be positive"
-                alreadyExists:
-                  summary: Produto já existe
-                  value:
-                    message: "Product with this barcode already exists"
-
+                    error: Product with the same barcode already exists
+        '500':
+          description: Erro de infraestrutura
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Database error
     get:
+      operationId: GetAllProducts
+      summary: Lista todos os produtos
       tags:
         - Products
-      summary: Listar todos os produtos
-      description: Retorna a lista de todos os produtos cadastrados no sistema.
-      operationId: listProducts
       responses:
         '200':
-          description: Lista de produtos retornada com sucesso
+          description: Lista de produtos
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ProductResponse'
+                  $ref: '#/components/schemas/Product'
               example:
-                - barcode: "1234567899"
-                  name: "Guaravita"
-                  quantityInStock: 50
-                  orderReferenceDays: 30
-                - barcode: "9876543210"
-                  name: "Água Mineral"
-                  quantityInStock: 100
-                  orderReferenceDays: 15
-        '400':
-          description: Erro ao listar produtos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-
-  /products/{barcode}:
-    get:
-      tags:
-        - Products
-      summary: Buscar produto por código de barras
-      description: Retorna os dados de um produto específico a partir do seu código de barras.
-      operationId: getProduct
-      parameters:
-        - name: barcode
-          in: path
-          required: true
-          description: Código de barras do produto
-          schema:
-            type: string
-          example: "1234567899"
-      responses:
-        '200':
-          description: Produto encontrado com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-              example:
-                barcode: "1234567899"
-                name: "Guaravita"
-                quantityInStock: 50
-                orderReferenceDays: 30
-        '400':
-          description: Produto não encontrado ou erro na busca
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-              examples:
-                notFound:
-                  summary: Produto não encontrado
-                  value:
-                    message: "Product not found"
-                error:
-                  summary: Erro ao buscar produto
-                  value:
-                    message: "Error retrieving product"
-
-  /product-orders:
-    post:
-      tags:
-        - Product Orders
-      summary: Criar um pedido de produto
-      description: |
-        Cria um novo pedido de compra de produto. O pedido é criado com status "opened".
-        O produto referenciado pelo código de barras deve existir previamente.
-      operationId: createProductOrder
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductOrderRequest'
-            example:
-              barcode: "1234567890"
-              quantity: 100
-              orderDate: "2026-02-20T00:00:00.000Z"
-      responses:
-        '201':
-          description: Pedido de produto criado com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductOrderResponse'
-              example:
-                productOrderId: "696a29bc-ea0f-4cf2-993e-9676a3062efd"
-                quantity: 100
-                orderDate: "2026-02-20T00:00:00.000Z"
-                status: "opened"
-                product:
-                  barcode: "1234567890"
-                  name: "Guaravita"
+                - barcode: '123456'
+                  name: Coca Cola 350ml
                   quantityInStock: 0
-                  orderReferenceDays: 30
-        '400':
-          description: Erro de validação ou produto não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorMessage'
-              examples:
-                productNotFound:
-                  summary: Produto não encontrado
-                  value:
-                    message: "Product not found"
-                invalidQuantity:
-                  summary: Quantidade inválida
-                  value:
-                    message: "Quantity must be positive"
-                invalidDate:
-                  summary: Data inválida
-                  value:
-                    message: "Order date must be valid"
-
-  /product-inputs:
-    post:
-      tags:
-        - Product Inputs
-      summary: Criar uma entrada de produto
-      description: |
-        Registra uma entrada de produto no estoque, vinculada a um pedido de produto (product order) existente.
-        A entrada atualiza o estoque do produto e fecha o pedido associado.
-        A data de entrada não pode ser anterior à data do pedido.
-      operationId: createProductInput
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductInputRequest'
-            example:
-              productOrderId: "696a29bc-ea0f-4cf2-993e-9676a3062efd"
-              quantity: 120
-              inputDate: "2026-02-28T00:00:00.000Z"
-      responses:
-        '201':
-          description: Entrada de produto criada com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductInputResponse'
-              example:
-                productInputId: "aafdd4cc-726a-440c-b531-b97ad0384b79"
-                productInputQuantity: 120
-                productInputDate: "2026-02-28T00:00:00.000Z"
-                productOrderId: "696a29bc-ea0f-4cf2-993e-9676a3062efd"
-                productOrderDate: "2026-02-20T00:00:00.000Z"
-                productOrderStatus: "closed"
-                productBarcode: "1234567890"
-                productName: "Guaravita"
-                productStock: 120
-        '400':
-          description: Erro de validação
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              examples:
-                orderIdRequired:
-                  summary: ID do pedido obrigatório
-                  value:
-                    error: "Product order ID is required"
-                invalidQuantity:
-                  summary: Quantidade inválida
-                  value:
-                    error: "Quantity must be a positive number"
-                dateRequired:
-                  summary: Data obrigatória
-                  value:
-                    error: "Input date is required"
-                invalidDate:
-                  summary: Formato de data inválido
-                  value:
-                    error: "Invalid input date format"
-                orderNotOpened:
-                  summary: Pedido não está aberto
-                  value:
-                    error: "Product order is not in opened status"
-                dateBeforeOrder:
-                  summary: Data anterior ao pedido
-                  value:
-                    error: "Input date cannot be before the product order date"
-        '404':
-          description: Recurso não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              examples:
-                orderNotFound:
-                  summary: Pedido não encontrado
-                  value:
-                    error: "Product order not found"
-                productNotFound:
-                  summary: Produto não encontrado
-                  value:
-                    error: "Product not found"
+                - barcode: '789012'
+                  name: Pepsi 350ml
+                  quantityInStock: 0
         '500':
-          description: Erro interno do servidor
+          description: Erro de infraestrutura
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorField'
+                $ref: '#/components/schemas/Error'
               example:
-                error: "Internal server error"
-
-  /product-inputs/{productInputId}:
-    delete:
-      tags:
-        - Product Inputs
-      summary: Deletar uma entrada de produto
-      description: |
-        Remove uma entrada de produto do sistema. Ao deletar, o estoque do produto é decrementado
-        pela quantidade da entrada e o pedido associado é reaberto (status volta para "opened").
-        Não é possível deletar se o estoque resultante for negativo.
-      operationId: deleteProductInput
-      parameters:
-        - name: productInputId
-          in: path
-          required: true
-          description: UUID da entrada de produto
-          schema:
-            type: string
-            format: uuid
-          example: "aafdd4cc-726a-440c-b531-b97ad0384b79"
-      responses:
-        '200':
-          description: Entrada de produto deletada com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-              example:
-                message: "Product input deleted successfully"
-        '400':
-          description: Erro de validação
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              examples:
-                idRequired:
-                  summary: ID obrigatório
-                  value:
-                    error: "Product input ID is required"
-                negativeStock:
-                  summary: Estoque ficaria negativo
-                  value:
-                    error: "Cannot delete product input as it would result in negative stock"
-        '404':
-          description: Recurso não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              examples:
-                inputNotFound:
-                  summary: Entrada não encontrada
-                  value:
-                    error: "Product input not found"
-                orderNotFound:
-                  summary: Pedido não encontrado
-                  value:
-                    error: "Product order not found"
-                productNotFound:
-                  summary: Produto não encontrado
-                  value:
-                    error: "Product not found"
-        '500':
-          description: Erro interno do servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              example:
-                error: "Internal server error"
-
-  /product-outputs:
-    post:
-      tags:
-        - Product Outputs
-      summary: Criar uma saída de produto
-      description: |
-        Registra uma saída de produto do estoque. A quantidade solicitada não pode exceder
-        o estoque disponível do produto. A saída decrementa o estoque automaticamente.
-      operationId: createProductOutput
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductOutputRequest'
-            example:
-              barcode: "1234567890"
-              quantity: 2
-              outputDate: "2026-02-28T00:00:00.000Z"
-      responses:
-        '201':
-          description: Saída de produto criada com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductOutputResponse'
-              example:
-                productOutputId: "012b7e13-26f4-432e-a00a-d03178fbd31b"
-                productOutputQuantity: 2
-                productOutputDate: "2026-02-28T00:00:00.000Z"
-                productBarcode: "1234567890"
-                productName: "Guaravita"
-                productStock: 118
-        '400':
-          description: Erro de validação ou estoque insuficiente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              examples:
-                productNotFound:
-                  summary: Produto não encontrado
-                  value:
-                    error: "Product not found"
-                insufficientStock:
-                  summary: Estoque insuficiente
-                  value:
-                    error: "Insufficient stock for the requested output quantity"
-                invalidQuantity:
-                  summary: Quantidade inválida
-                  value:
-                    error: "Quantity must be positive"
-                invalidDate:
-                  summary: Data inválida
-                  value:
-                    error: "Output date must be valid"
-
-  /product-outputs/{productOutputId}:
-    delete:
-      tags:
-        - Product Outputs
-      summary: Deletar uma saída de produto
-      description: |
-        Remove uma saída de produto do sistema. Ao deletar, o estoque do produto é incrementado
-        pela quantidade da saída removida.
-      operationId: deleteProductOutput
-      parameters:
-        - name: productOutputId
-          in: path
-          required: true
-          description: UUID da saída de produto
-          schema:
-            type: string
-            format: uuid
-          example: "012b7e13-26f4-432e-a00a-d03178fbd31b"
-      responses:
-        '200':
-          description: Saída de produto deletada com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-              example:
-                message: "Product output deleted successfully"
-        '400':
-          description: Erro de validação
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              example:
-                error: "Product output ID is required"
-        '404':
-          description: Recurso não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              examples:
-                outputNotFound:
-                  summary: Saída não encontrada
-                  value:
-                    error: "Product output not found"
-                productNotFound:
-                  summary: Produto não encontrado
-                  value:
-                    error: "Product not found"
-        '500':
-          description: Erro interno do servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorField'
-              example:
-                error: "Internal server error"
-
+                error: Database error
 components:
   schemas:
     CreateProductRequest:
@@ -490,233 +90,36 @@ components:
       required:
         - barcode
         - name
-        - orderReferenceDays
       properties:
         barcode:
           type: string
-          description: Código de barras do produto (identificador único)
-          example: "1234567899"
+          minLength: 1
+          description: Codigo de barras do produto
         name:
           type: string
+          minLength: 1
           description: Nome do produto
-          example: "Guaravita"
-        orderReferenceDays:
-          type: integer
-          description: Dias de referência para pedido (deve ser positivo)
-          minimum: 1
-          example: 30
-
-    ProductResponse:
+    Product:
       type: object
+      required:
+        - barcode
+        - name
+        - quantityInStock
       properties:
         barcode:
           type: string
-          description: Código de barras do produto
-          example: "1234567899"
+          description: Codigo de barras do produto
         name:
           type: string
           description: Nome do produto
-          example: "Guaravita"
         quantityInStock:
           type: integer
-          description: Quantidade atual em estoque
-          example: 50
-        orderReferenceDays:
-          type: integer
-          description: Dias de referência para pedido
-          example: 30
-
-    CreateProductOrderRequest:
+          minimum: 0
+          description: Quantidade disponivel em estoque
+    Error:
       type: object
       required:
-        - barcode
-        - quantity
-        - orderDate
-      properties:
-        barcode:
-          type: string
-          description: Código de barras do produto ao qual o pedido se refere
-          example: "1234567890"
-        quantity:
-          type: integer
-          description: Quantidade solicitada no pedido (deve ser positiva)
-          minimum: 1
-          example: 100
-        orderDate:
-          type: string
-          format: date-time
-          description: Data do pedido no formato ISO 8601
-          example: "2026-02-20T00:00:00.000Z"
-
-    ProductOrderResponse:
-      type: object
-      properties:
-        productOrderId:
-          type: string
-          format: uuid
-          description: UUID do pedido de produto
-          example: "696a29bc-ea0f-4cf2-993e-9676a3062efd"
-        quantity:
-          type: integer
-          description: Quantidade do pedido
-          example: 100
-        orderDate:
-          type: string
-          format: date-time
-          description: Data do pedido
-          example: "2026-02-20T00:00:00.000Z"
-        status:
-          type: string
-          description: Status do pedido
-          enum:
-            - opened
-            - closed
-          example: "opened"
-        product:
-          $ref: '#/components/schemas/ProductResponse'
-
-    CreateProductInputRequest:
-      type: object
-      required:
-        - productOrderId
-        - quantity
-        - inputDate
-      properties:
-        productOrderId:
-          type: string
-          format: uuid
-          description: UUID do pedido de produto ao qual a entrada está vinculada
-          example: "696a29bc-ea0f-4cf2-993e-9676a3062efd"
-        quantity:
-          type: integer
-          description: Quantidade de entrada (deve ser positiva)
-          minimum: 1
-          example: 120
-        inputDate:
-          type: string
-          format: date-time
-          description: Data da entrada no formato ISO 8601
-          example: "2026-02-28T00:00:00.000Z"
-
-    ProductInputResponse:
-      type: object
-      properties:
-        productInputId:
-          type: string
-          format: uuid
-          description: UUID da entrada de produto
-          example: "aafdd4cc-726a-440c-b531-b97ad0384b79"
-        productInputQuantity:
-          type: integer
-          description: Quantidade da entrada
-          example: 120
-        productInputDate:
-          type: string
-          format: date-time
-          description: Data da entrada
-          example: "2026-02-28T00:00:00.000Z"
-        productOrderId:
-          type: string
-          format: uuid
-          description: UUID do pedido vinculado
-          example: "696a29bc-ea0f-4cf2-993e-9676a3062efd"
-        productOrderDate:
-          type: string
-          format: date-time
-          description: Data do pedido vinculado
-          example: "2026-02-20T00:00:00.000Z"
-        productOrderStatus:
-          type: string
-          description: Status do pedido após a entrada
-          enum:
-            - opened
-            - closed
-          example: "closed"
-        productBarcode:
-          type: string
-          description: Código de barras do produto
-          example: "1234567890"
-        productName:
-          type: string
-          description: Nome do produto
-          example: "Guaravita"
-        productStock:
-          type: integer
-          description: Estoque atualizado do produto após a entrada
-          example: 120
-
-    CreateProductOutputRequest:
-      type: object
-      required:
-        - barcode
-        - quantity
-        - outputDate
-      properties:
-        barcode:
-          type: string
-          description: Código de barras do produto
-          example: "1234567890"
-        quantity:
-          type: integer
-          description: Quantidade de saída (deve ser positiva e não exceder o estoque)
-          minimum: 1
-          example: 2
-        outputDate:
-          type: string
-          format: date-time
-          description: Data da saída no formato ISO 8601
-          example: "2026-02-28T00:00:00.000Z"
-
-    ProductOutputResponse:
-      type: object
-      properties:
-        productOutputId:
-          type: string
-          format: uuid
-          description: UUID da saída de produto
-          example: "012b7e13-26f4-432e-a00a-d03178fbd31b"
-        productOutputQuantity:
-          type: integer
-          description: Quantidade da saída
-          example: 2
-        productOutputDate:
-          type: string
-          format: date-time
-          description: Data da saída
-          example: "2026-02-28T00:00:00.000Z"
-        productBarcode:
-          type: string
-          description: Código de barras do produto
-          example: "1234567890"
-        productName:
-          type: string
-          description: Nome do produto
-          example: "Guaravita"
-        productStock:
-          type: integer
-          description: Estoque atualizado do produto após a saída
-          example: 118
-
-    ErrorMessage:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Mensagem de erro
-          example: "Error message"
-
-    ErrorField:
-      type: object
+        - error
       properties:
         error:
           type: string
-          description: Mensagem de erro
-          example: "Error message"
-
-    SuccessMessage:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Mensagem de sucesso
-          example: "Operation completed successfully"

@@ -96,10 +96,6 @@ export default function ProductDetailsPage() {
               <span className="detail-label">Quantidade em Estoque</span>
               <strong>{product.quantityInStock}</strong>
             </div>
-            <div className="detail-item">
-              <span className="detail-label">Dias de Referência</span>
-              <strong>{product.orderReferenceDays}</strong>
-            </div>
           </div>
         </div>
       ) : (
