@@ -5,6 +5,8 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductCreatePage from "./pages/ProductCreatePage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import OrdersPage from "./pages/OrdersPage";
+import ProductOrderCreatePage from "./pages/ProductOrderCreatePage";
+import ProductOrderDetailsPage from "./pages/ProductOrderDetailsPage";
 import InputsPage from "./pages/InputsPage";
 import OutputsPage from "./pages/OutputsPage";
 
@@ -20,6 +22,8 @@ export default function App() {
             <Route path="/products/new" element={<ProductCreatePage />} />
             <Route path="/products/:barcode" element={<ProductDetailsPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/new" element={<ProductOrderCreatePage />} />
+            <Route path="/orders/:id" element={<ProductOrderDetailsPage />} />
             <Route path="/inputs" element={<InputsPage />} />
             <Route path="/outputs" element={<OutputsPage />} />
           </Routes>
